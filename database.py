@@ -8,8 +8,8 @@ def connect_to_database(db_str):
     try:
         con = sqlite3.connect(db_str)
         cur = con.cursor()
-    except:
-        print('Error connecting to database')
+    except sqlite3.Error as error:
+        print('Error connecting to database:',error)
      
     return con, cur
 
@@ -26,17 +26,62 @@ def create_user_table(cur):
     else:
         print('Table found!')
 
-def delete_user_table(cur):
-    print('Deleting user table')
-    sql = "DROP TABLE user"
+def delete_user_table_contents():
+    con, cur = connect_to_database(db_name)
+    print('Deleting user table contents')
+    sql = "DELETE FROM user;"
     try:
         cur.execute(sql)
-    except:
-        print('Error while deleting table')
+        con.commit()
+    except sqlite3.Error as error:
+        print('Error while deleting table contents: ',error)
     
+    cur.close()
+    con.close()
     return
 
+def add_user(username, password, pkey):
+    con, cur = connect_to_database(db_name)
+    sql =   """INSERT INTO user
+            (username,password,pkey,msgs)
+            VALUES
+            (?, ?, ?, ?);"""
+    data_tuple = (username, password, pkey, '')
+    try:
+        cur.execute(sql, data_tuple)
+        con.commit()
+    except sqlite3.Error as error:
+        print('Error adding user: ',error)
 
+    cur.close()
+    con.close()
+
+def print_all_users():
+    con, cur = connect_to_database(db_name)
+    cur.execute("SELECT * FROM user")
+    print(cur.fetchall())
+    cur.close()
+    con.close()
+
+def does_user_exist(username):
+    con, cur = connect_to_database(db_name)
+    sql = """SELECT username FROM user WHERE username=?"""
+    try:
+        cur.execute(sql,(username,))
+        result = cur.fetchone()
+    except sqlite3.Error as error:
+        print('Error checking for user:',error)
+        cur.close()
+        con.close()
+        return False
+    if result:
+        cur.close()
+        con.close()
+        return True
+    else:
+        cur.close()
+        con.close()
+        return False
 
 def main():
     con, cur = connect_to_database(db_name)
@@ -48,8 +93,19 @@ def main():
 
     res = cur.execute("SELECT name FROM sqlite_master")
     print(res.fetchone())
-    
-    #delete_user_table(cur)
+
+    while True:
+        print_all_users()
+        uname = input('Enter username: ')
+        if uname == 'exit':
+            break
+        elif uname == 'delete':
+            delete_user_table_contents()
+        else:
+            if does_user_exist(uname):
+                print('user already exists')
+            else:
+                add_user(uname, 'none for now', 'will add later')
     
     print("check")
 
