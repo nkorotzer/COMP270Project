@@ -6,6 +6,7 @@ import client
 
 
 userinfo_file = 'userinfo.txt'
+USERNAME_LENGTH = 16
 
 def create_username():
     while True:
@@ -14,12 +15,15 @@ def create_username():
             print(f'{username} is too short, extend to at least 8 characters')
         elif len(username) > 16:
             print(f'{username} is too long, please shorten to at most 16 characters')
+        elif '_' in username:
+            print('\'_\' character is not allowed in usernames')
         else:
-            return username
+            return username.ljust(USERNAME_LENGTH,'_')
         
 def create_password():
     password = input('Enter Password: ')
     pword = nacl.pwhash.scrypt.str(password.encode())
+    print(f'password \'{pword}\' length is {len(pword)}')
     return pword
 
 def does_user_exist(username):
@@ -77,6 +81,8 @@ def login_menu():
         # new user
         while True:
             username = create_username()
+            orig = username.strip('_')
+            print(f'user name is {username}, length is {len(username)}, removing underscores is {orig}')
             password = create_password()
             if does_user_exist(username):
                 print(f'\'{username}\' is already taken')
@@ -91,7 +97,7 @@ def login_menu():
 
 def main():
     while True:
-        answer = input('Enter e to exit, or another key to continue')
+        answer = input('Enter e to exit, or another key to continue: ')
         if answer.lower() == 'e':
             break
         else:
