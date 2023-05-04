@@ -6,7 +6,6 @@ import message_types
 
 # TODO flesh out parse_message function to include other message types
 #   add integration with database.py to check for usernames
-#   add proper packet structure when sending messages back to client
 
 def remove_start_and_end(data):
     if data[0:5] == b'start' and data[-3:] == b'end':
@@ -24,8 +23,12 @@ def parse_message_from_client(data):
 
     match message_type:
         case message_types.CHECK_USER:
-            print('success!')
-            return message_types.CHECK_USER + 'success!'.encode()
+            username = message[1:]
+            print('received username: ',username)
+            if database.does_user_exist(username.decode()):
+                return message_types.CHECK_USER + 'yes'.encode()
+            else:
+                return message_types.CHECK_USER + 'no'.encode()
         case _:
             return 'Invalid message type received from client'
 
