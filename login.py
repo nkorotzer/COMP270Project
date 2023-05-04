@@ -1,4 +1,9 @@
 import nacl.pwhash
+import client
+
+# TODO convert code to interact with server instead of local files
+#   
+
 
 userinfo_file = 'userinfo.txt'
 
@@ -18,13 +23,14 @@ def create_password():
     return pword
 
 def does_user_exist(username):
-    with open(userinfo_file,'r') as file:
-        for line in file.readlines():
-            file_username = line.split()[0]
-            if username == file_username:
-                return True
-        print('Username not found')
-        return False
+    # with open(userinfo_file,'r') as file:
+    #     for line in file.readlines():
+    #         file_username = line.split()[0]
+    #         if username == file_username:
+    #             return True
+    #     print('Username not found')
+    #     return False
+    client.message_does_user_exist(username)
     
 def check_password(password, username):
     with open(userinfo_file,'r') as file:
@@ -71,6 +77,7 @@ def login_menu():
         # new user
         username = create_username()
         password = create_password()
+        does_user_exist(username)
         with open(userinfo_file,'a') as file:
             file.write(username)
             file.write(' ')
