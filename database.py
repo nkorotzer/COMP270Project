@@ -1,13 +1,15 @@
 import sqlite3
 import sys
 
+db_name = "info.db"
+
 def connect_to_database(db_str):
     con = None
     try:
         con = sqlite3.connect(db_str)
         cur = con.cursor()
-    except Error as e:
-        print(e)
+    except:
+        print('Error connecting to database')
      
     return con, cur
 
@@ -19,7 +21,7 @@ def create_user_table(cur):
      
     if listOfTables == []:
         print('Table not found, creating...')
-        sql = "CREATE TABLE user(name, password, msgs)"
+        sql = "CREATE TABLE user(username, password, pkey, msgs)"
         cur.execute(sql)
     else:
         print('Table found!')
@@ -34,9 +36,9 @@ def delete_user_table(cur):
     
     return
 
+
+
 def main():
-    db_name = "info.db"
-    
     con, cur = connect_to_database(db_name)
     if con == None:
         sys.exit("Connection to database failed to establish")
