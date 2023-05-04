@@ -30,7 +30,7 @@ def does_user_exist(username):
     #             return True
     #     print('Username not found')
     #     return False
-    client.message_does_user_exist(username)
+    return client.message_does_user_exist(username)
     
 def check_password(password, username):
     with open(userinfo_file,'r') as file:
@@ -75,9 +75,13 @@ def login_menu():
 
     elif response.lower() == 'c':
         # new user
-        username = create_username()
-        password = create_password()
-        does_user_exist(username)
+        while True:
+            username = create_username()
+            password = create_password()
+            if does_user_exist(username):
+                print(f'\'{username}\' is already taken')
+            else:
+                break
         with open(userinfo_file,'a') as file:
             file.write(username)
             file.write(' ')
