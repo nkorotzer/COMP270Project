@@ -10,6 +10,12 @@ def encrypt_message(plaintext, box):
 def add_start_and_end(encrypted):
      return 'start'.encode() + encrypted + 'end'.encode()
 
+def remove_start_and_end(data):
+    if data[0:5] == b'start' and data[-3:] == b'end':
+        return data[5:-3]
+    else:
+        print('Head and tail missing from message')
+
 def prep_message(plaintext, box):
      return add_start_and_end(encrypted=encrypt_message(plaintext=plaintext, box=box))
 
@@ -41,14 +47,15 @@ def main():
             data = s.recv(1024)
                 
             print(f"Received {data}")
-            if data[0:5] == b'start' and data[-3:] == b'end':
-                ret = data[5:-3]
-            else:
-                print('Head and tail missing from message')
+            
+            ret = remove_start_and_end(data)
 
-            print('encrypted message:\t',ret)
-            print('decrypted message:\t',clientBox.decrypt(ret).decode())
-                 
+            if not ret:
+                print('Error parsing returned packet')
+            else:
+                print('encrypted message:\t',ret)
+                print('decrypted message:\t',clientBox.decrypt(ret).decode())
+                    
         sys.exit()
 	
 	
