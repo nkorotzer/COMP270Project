@@ -14,16 +14,20 @@ def remove_start_and_end(data):
     else:
         print('Head and tail missing from message')
 
-def parse_message(data):
-    message = remove_start_and_end(data)
+def add_start_and_end(encrypted):
+    # input should be encoded
+    return 'start'.encode() + encrypted + 'end'.encode()
 
-    if message[0:1] == message_types.CHECK_USER:
-        print('success!')
-        return 'success!'
-    else:
-        print(message[0])
-        print(message[0:1])
-    return 'bummer'
+def parse_message_from_client(data):
+    message = remove_start_and_end(data)
+    message_type = message[0:1]
+
+    match message_type:
+        case message_types.CHECK_USER:
+            print('success!')
+            return message_types.CHECK_USER + 'success!'.encode()
+        case _:
+            return 'Invalid message type received from client'
 
 def client_thread(connection, address):
     BUFFER_SIZE = 1024
@@ -34,8 +38,9 @@ def client_thread(connection, address):
             if not data:
                 break
 
-            return_msg = parse_message(data)
-            connection.sendall(return_msg.encode())
+            return_msg = parse_message_from_client(data)
+            return_msg = add_start_and_end(return_msg)
+            connection.sendall(return_msg)
     print(f'Closing connection with {address}')
 
 def listen_on_socket(host, port):

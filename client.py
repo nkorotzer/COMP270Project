@@ -21,6 +21,7 @@ def encrypt_message(plaintext, box):
     return box.encrypt(plaintext.encode())
 
 def add_start_and_end(encrypted):
+    # input should be encoded
     return 'start'.encode() + encrypted + 'end'.encode()
 
 def remove_start_and_end(data):
@@ -35,8 +36,13 @@ def prep_message(plaintext: str, box):
 
 def message_does_user_exist(username: str) -> bool:
     # sends packet to server to check if a user with the given username already exists
-    message = message_types.CHECK_USER.decode() + username
-    send_message(message)
+    message = message_types.CHECK_USER + username.encode()
+    response = send_message_to_server(message)
+    if isinstance(response,str):
+        print('Invalid response received from server, closing...')
+        sys.exit()
+    else:
+        return response
 
 def message_create_user():
     # sends packet to server to create a user in user table
@@ -46,27 +52,41 @@ def message_validate_user():
     # sends packet to server to validate user credentials
     pass
 
-def send_message(message):
+def send_message_to_server(message):
+    # pass in encoded message to send to server
+    # return the response from the server
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         try:
             s.connect((HOST,PORT))
         except:
-            print('Error connecting, closing...')
+            print('Error connecting, closing... (double check that server is running)')
             sys.exit()
 
         print(f'Connected to {HOST}:{PORT}')
 
-        msg = add_start_and_end(message.encode())
+        msg = add_start_and_end(message)
         s.sendall(msg)
 
         data = s.recv(1024)
-        parse_response(data)
+        parse_response_from_server(data)
     return
 
-def parse_response(data):
+def parse_response_from_server(data):
     print('parsing received message:\t', data)
-    return
+    message = remove_start_and_end(data)
+    message_type = message[0:1]
+
+    match message_type:
+        case message_types.CHECK_USER:
+            response = message[1:].decode()
+            print('response:\t',response)
+            if response == 'yes':
+                return True
+            else:
+                return False
+        case _:
+            return 'Invalid message type received from server'
 
 def main():
     secretKey = PrivateKey.generate()
