@@ -29,8 +29,8 @@ def delete_user_table(cur):
     sql = "DROP TABLE user"
     try:
         cur.execute(sql)
-    except Error as e:
-        print(e)
+    except:
+        print('Error while deleting table')
     
     return
 
