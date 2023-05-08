@@ -37,7 +37,7 @@ def does_user_exist(username):
     #     return False
     return client.message_does_user_exist(username)
     
-def check_password(password, username):
+def check_password(username, password):
     with open(userinfo_file,'r') as file:
         for line in file.readlines():
             file_username = line.split()[0]
@@ -54,21 +54,19 @@ def check_password(password, username):
 
 def validate_user():
     # check user's username and password
-    while True:
-        username = input('Enter username: ')
-        password = input('Enter password: ')
-        # pword = nacl.pwhash.scrypt.str(password.encode())
-        
-        if does_user_exist(username):
-            if check_password(password, username):
-                print(f'Logged in, welcome {username}!')
-                return True
-            else:
-                print('Password incorrect')
-                return False
+    username = input('Enter username: ')
+    password = input('Enter password: ')
+    
+    if does_user_exist(username):
+        if check_password(username, password):
+            
+            return True, username
         else:
-            print(f'User with username \'{username}\' does not exist')
-            return False
+            print('Password incorrect')
+            return False, ''
+    else:
+        print(f'User with username \'{username}\' does not exist')
+        return False, ''
 
 def store_private_key(username, sec_key):
     fileName = f'{username}.txt'
@@ -98,6 +96,10 @@ def create_user():
 
     client.message_create_user(username, password, pub_key)
 
+def user_menu(username):
+    print(f'Logged in, welcome {username}!')
+    print('menu TBD')
+
 def get_login_menu_choice():
     valid_choices = 'lce'
     while True:
@@ -115,20 +117,15 @@ def login_menu():
         match choice:
             case 'l':
                 # returning user
-                if validate_user():
-                    print('menu TBD')
+                validated, username = validate_user()
+                if validated:
+                    user_menu(username)
                 else:
                     print('Login failed')
 
             case 'c':
                 # new user
                 create_user()
-
-                # with open(userinfo_file,'a') as file:
-                #     file.write(username)
-                #     file.write(' ')
-                #     file.write(password.decode())
-                #     file.write('\n')
 
             case 'e':
                 # exit program
