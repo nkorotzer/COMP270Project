@@ -44,9 +44,11 @@ def message_does_user_exist(username: str) -> bool:
     else:
         return response
 
-def message_create_user():
+def message_create_user(username, password, pub_key):
     # sends packet to server to create a user in user table
-    pass
+    message = message_types.CREATE_USER + username.encode() + password + pub_key.encode()
+    response = send_message_to_server(message)
+    return response
 
 def message_validate_user():
     # sends packet to server to validate user credentials
@@ -69,8 +71,8 @@ def send_message_to_server(message):
         s.sendall(msg)
 
         data = s.recv(1024)
-        parse_response_from_server(data)
-    return
+        response = parse_response_from_server(data)
+    return response
 
 def parse_response_from_server(data):
     print('parsing received message:\t', data)
@@ -82,6 +84,12 @@ def parse_response_from_server(data):
             response = message[1:].decode()
             print('response:\t',response)
             if response == 'yes':
+                return True
+            else:
+                return False
+        case message_types.CREATE_USER:
+            response = message[1:].decode()
+            if response == 'success':
                 return True
             else:
                 return False

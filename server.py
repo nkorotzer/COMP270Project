@@ -23,14 +23,22 @@ def parse_message_from_client(data):
 
     match message_type:
         case message_types.CHECK_USER:
-            username = message[1:]
+            username = message[1:].decode()
             print('received username: ',username)
-            if database.does_user_exist(username.decode()):
+            if database.does_user_exist(username):
                 return message_types.CHECK_USER + 'yes'.encode()
             else:
                 return message_types.CHECK_USER + 'no'.encode()
+            
+        case message_types.CREATE_USER:
+            username = message[1:17]
+            password = message[17:118]
+            pub_key = message[118:]
+            result = database.add_user(username.decode(), password, pub_key).encode()
+            return message_types.CREATE_USER + result
+        
         case _:
-            return 'Invalid message type received from client'
+            return 'Invalid message type received from client'.encode()
 
 def client_thread(connection, address):
     BUFFER_SIZE = 1024

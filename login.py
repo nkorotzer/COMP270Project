@@ -1,5 +1,6 @@
 import nacl.pwhash
 import client
+from nacl.public import PrivateKey
 
 # TODO convert code to interact with server instead of local files
 #   
@@ -23,7 +24,7 @@ def create_username():
 def create_password():
     password = input('Enter Password: ')
     pword = nacl.pwhash.scrypt.str(password.encode())
-    print(f'password \'{pword}\' length is {len(pword)}')
+    # print(f'password \'{pword}\' length is {len(pword)}')
     return pword
 
 def does_user_exist(username):
@@ -62,46 +63,83 @@ def validate_user():
             if check_password(password, username):
                 print(f'Logged in, welcome {username}!')
                 return True
-            
-def login_menu():
-    # get user input
+            else:
+                print('Password incorrect')
+                return False
+        else:
+            print(f'User with username \'{username}\' does not exist')
+            return False
+
+def store_private_key(username, sec_key):
+    fileName = f'{username}.txt'
+    with open(fileName,'wb') as file:
+        file.write(sec_key.encode())
+
+def get_user_private_key(username):
+    fileName = f'{username}.txt'
+    with open(fileName,'rb') as file:
+        return file.read()
+
+def create_user():
+    # loop until a valid username is entered
     while True:
-        response = input('Log in (l) or create new account (c): ')
-        if response.lower() not in 'lc':
+        username = create_username()
+        orig = username.strip('_')
+        if does_user_exist(username):
+            print(f'Username \'{orig}\' is already taken')
+        else:
+            break
+        
+    password = create_password()
+
+    sec_key = PrivateKey.generate()
+    pub_key = sec_key.public_key
+    store_private_key(orig, sec_key)
+
+    client.message_create_user(username, password, pub_key)
+
+def get_login_menu_choice():
+    valid_choices = 'lce'
+    while True:
+        response = input('Log in (l), create new account (c), or exit (e): ')
+        if response.lower() not in valid_choices:
             print('Invalid option')
         else:
-            break
+            return response.lower()
 
-    if response.lower() == 'l':
-        # returning user
-        if validate_user():
-            print('menu TBD')
+def login_menu():
+    while True:
+        # get user input
+        choice = get_login_menu_choice()
 
-    elif response.lower() == 'c':
-        # new user
-        while True:
-            username = create_username()
-            orig = username.strip('_')
-            print(f'user name is {username}, length is {len(username)}, removing underscores is {orig}')
-            password = create_password()
-            if does_user_exist(username):
-                print(f'\'{username}\' is already taken')
-            else:
-                break
-        with open(userinfo_file,'a') as file:
-            file.write(username)
-            file.write(' ')
-            file.write(password.decode())
-            file.write('\n')
-    return
+        match choice:
+            case 'l':
+                # returning user
+                if validate_user():
+                    print('menu TBD')
+                else:
+                    print('Login failed')
+
+            case 'c':
+                # new user
+                create_user()
+
+                # with open(userinfo_file,'a') as file:
+                #     file.write(username)
+                #     file.write(' ')
+                #     file.write(password.decode())
+                #     file.write('\n')
+
+            case 'e':
+                # exit program
+                print('Closing program...')
+                return
+            case _:
+                print('Invalid menu option, closing...')
+                return
 
 def main():
-    while True:
-        answer = input('Enter e to exit, or another key to continue: ')
-        if answer.lower() == 'e':
-            break
-        else:
-            login_menu()
+    login_menu()
 
 if __name__ == '__main__':
     main()

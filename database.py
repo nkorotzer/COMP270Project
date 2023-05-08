@@ -50,11 +50,14 @@ def add_user(username, password, pkey):
     try:
         cur.execute(sql, data_tuple)
         con.commit()
+        ret = 'success'
     except sqlite3.Error as error:
         print('Error adding user: ',error)
+        ret = 'fail'
 
     cur.close()
     con.close()
+    return ret
 
 def print_all_users():
     con, cur = connect_to_database(db_name)
@@ -77,10 +80,12 @@ def does_user_exist(username):
     if result:
         cur.close()
         con.close()
+        print(f'User \'{username}\' already exists')
         return True
     else:
         cur.close()
         con.close()
+        print(f'User \'{username}\' does not exist')
         return False
 
 def main():
