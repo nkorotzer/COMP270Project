@@ -5,9 +5,9 @@ import nacl.utils
 from nacl.public import PrivateKey, Box
 import message_types
 
-# TODO flesh out parse_message function for packets received from server
-#   clean up main function
-#   finish message_create_user and message_validate_user functions
+# TODO 
+#   Message encryption
+#   User messaging
 
 HOST = "127.0.0.1"
 PORT = 65432

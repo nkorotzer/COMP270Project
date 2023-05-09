@@ -2,10 +2,6 @@ import nacl.pwhash
 import client
 from nacl.public import PrivateKey
 
-# TODO convert code to interact with server instead of local files
-#   
-
-
 userinfo_file = 'userinfo.txt'
 USERNAME_LENGTH = 16
 

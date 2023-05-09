@@ -4,9 +4,6 @@ from threading import Thread
 import database
 import message_types
 
-# TODO flesh out parse_message function to include other message types
-#   add integration with database.py to check for usernames
-
 def remove_start_and_end(data):
     if data[0:5] == b'start' and data[-3:] == b'end':
         return data[5:-3]
