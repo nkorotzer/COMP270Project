@@ -22,41 +22,24 @@ def create_username():
             return username.ljust(USERNAME_LENGTH,'_')
         
 def create_password():
+    # returns 101-byte long password
     password = input('Enter Password: ')
     pword = nacl.pwhash.scrypt.str(password.encode())
-    # print(f'password \'{pword}\' length is {len(pword)}')
     return pword
 
 def does_user_exist(username):
-    # with open(userinfo_file,'r') as file:
-    #     for line in file.readlines():
-    #         file_username = line.split()[0]
-    #         if username == file_username:
-    #             return True
-    #     print('Username not found')
-    #     return False
     return client.message_does_user_exist(username)
     
 def check_password(username, password):
-    with open(userinfo_file,'r') as file:
-        for line in file.readlines():
-            file_username = line.split()[0]
-            file_password = line.split()[1]
-            if username == file_username:
-                try:
-                    nacl.pwhash.scrypt.verify(file_password.encode(), password.encode())
-                except:
-                    print(f'Password for {username} incorrect')
-                    return False
-                return True
-        print('Username not Found (while checking password)')
-        return False
+    return client.message_validate_user(username, password)
 
 def validate_user():
     # check user's username and password
     username = input('Enter username: ')
     password = input('Enter password: ')
     
+    username = username.ljust(USERNAME_LENGTH,'_')
+
     if does_user_exist(username):
         if check_password(username, password):
             
@@ -97,7 +80,8 @@ def create_user():
     client.message_create_user(username, password, pub_key)
 
 def user_menu(username):
-    print(f'Logged in, welcome {username}!')
+    orig = username.strip('_')
+    print(f'Logged in, welcome {orig}!')
     print('menu TBD')
 
 def get_login_menu_choice():

@@ -1,5 +1,7 @@
 import sqlite3
 import sys
+import nacl.pwhash
+import nacl.exceptions
 
 db_name = "info.db"
 
@@ -87,6 +89,24 @@ def does_user_exist(username):
         con.close()
         print(f'User \'{username}\' does not exist')
         return False
+
+def validate_user(username, password):
+    con, cur = connect_to_database(db_name)
+    sql = """SELECT password FROM user where username=?"""
+    try:
+        cur.execute(sql,(username,))
+        result = cur.fetchone()
+    except sqlite3.Error as error:
+        print('Error finding password: ', error)
+    
+    password_hash = result[0]
+    print('Password hash = ', password_hash)
+    print('Password = ', password)
+    try:
+        result = nacl.pwhash.scrypt.verify(password_hash, password.encode())
+    except nacl.exceptions.CryptoError as error:
+        print('error verifying password: ', error)
+    return result
 
 def main():
     con, cur = connect_to_database(db_name)

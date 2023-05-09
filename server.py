@@ -31,12 +31,19 @@ def parse_message_from_client(data):
                 return message_types.CHECK_USER + 'no'.encode()
             
         case message_types.CREATE_USER:
-            username = message[1:17]
+            username = message[1:17].decode()
             password = message[17:118]
             pub_key = message[118:]
-            result = database.add_user(username.decode(), password, pub_key).encode()
+            result = database.add_user(username, password, pub_key).encode()
             return message_types.CREATE_USER + result
         
+        case message_types.VALIDATE_USER:
+            username = message[1:17].decode()
+            password = message[17:].decode()
+            print(username, password)
+            result = database.validate_user(username, password)
+            return message_types.VALIDATE_USER + str(result).encode()
+
         case _:
             return 'Invalid message type received from client'.encode()
 

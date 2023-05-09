@@ -50,9 +50,11 @@ def message_create_user(username, password, pub_key):
     response = send_message_to_server(message)
     return response
 
-def message_validate_user():
+def message_validate_user(username, password):
     # sends packet to server to validate user credentials
-    pass
+    message = message_types.VALIDATE_USER + username.encode() + password.encode()
+    response = send_message_to_server(message)
+    return response
 
 def send_message_to_server(message):
     # pass in encoded message to send to server
@@ -87,12 +89,21 @@ def parse_response_from_server(data):
                 return True
             else:
                 return False
+            
         case message_types.CREATE_USER:
             response = message[1:].decode()
             if response == 'success':
                 return True
             else:
                 return False
+            
+        case message_types.VALIDATE_USER:
+            response = message[1:].decode()
+            if response == "True":
+                return True
+            else:
+                return False
+
         case _:
             return 'Invalid message type received from server'
 
