@@ -1,5 +1,6 @@
 import nacl.pwhash
 import client
+import server_info
 from nacl.public import PrivateKey
 
 userinfo_file = 'userinfo.txt'
@@ -53,9 +54,14 @@ def store_private_key(username, sec_key):
         file.write(sec_key.encode())
 
 def get_user_private_key(username):
+    # returns the private key bytes
     fileName = f'{username}.txt'
     with open(fileName,'rb') as file:
         return file.read()
+
+def get_server_public_key():
+    # returns the public key bytes
+    return server_info.get_public_key()
 
 def create_user():
     # loop until a valid username is entered
@@ -75,10 +81,36 @@ def create_user():
 
     client.message_create_user(username, password, pub_key)
 
+def get_user_menu_choice():
+    valid_choices = 'sre'
+    while True:
+        response = input('Send message (s), read inbox (r), or exit (e): ')
+        if response.lower() not in valid_choices:
+            print('Invalid option')
+        else:
+            return response.lower()
+
 def user_menu(username):
     orig = username.strip('_')
     print(f'Logged in, welcome {orig}!')
-    print('menu TBD')
+
+    while True:
+        # get user input
+        choice = get_user_menu_choice()
+
+        match choice:
+            case 's':
+                print('Sending TBD')
+                return
+            case 'r':
+                print('Reading TBD')
+                return
+            case 'e':
+                print('Logging out...')
+                return
+            case _:
+                print('Invalid menu choice, logging out')
+                return
 
 def get_login_menu_choice():
     valid_choices = 'lce'
