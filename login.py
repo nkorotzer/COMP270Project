@@ -91,6 +91,52 @@ def create_user():
 
     client.message_create_user(username, password, pub_key)
 
+def send_message(sender):
+    # send a message to another user
+
+    # get recipient username
+    while True:
+        orig_receiver = input('Who do you want to send a message to? (e to exit) ')
+        receiver = orig_receiver.ljust(USERNAME_LENGTH,'_')
+        if orig_receiver == 'e':
+            return 
+        elif does_user_exist(receiver):
+            break
+        else:
+            print(f'User \'{orig_receiver}\' does not exist')
+
+    # get message
+    while True:
+        message = input('Enter message: ')
+        if message is not None:
+            break
+        else:
+            print('Message cannot be blank')
+
+    # get recipient's public key
+    user_sec_key = get_user_private_key(sender)
+    server_pub_key = get_server_public_key()
+    encrypted_target = encrypt.encrypt_text(server_pub_key, user_sec_key, receiver.encode())
+
+    # decrypt recipient's public key
+    response = client.message_get_user_pub_key(sender,encrypted_target)
+    receiver_pub_key = encrypt.decrypt_text(server_pub_key, user_sec_key, response)
+
+    # two-layer encryption packet formation
+    innerBox = encrypt.encrypt_text(receiver_pub_key, user_sec_key, message.encode())
+    innerBox = receiver.encode() + innerBox
+    outerBox = encrypt.encrypt_text(server_pub_key, user_sec_key, innerBox)
+
+    # call client function to send message to recipient
+    response = client.message_send_message(sender, outerBox)
+    result = encrypt.decrypt_text(server_pub_key, user_sec_key, response).decode()
+    # print('result:\t',result)
+    if result == 'success':
+        print('Message sent successfully!')
+    else:
+        print('Error while sending message')
+    return
+
 def get_user_menu_choice():
     valid_choices = 'sre'
     while True:
@@ -110,11 +156,9 @@ def user_menu(username):
 
         match choice:
             case 's':
-                print('Sending TBD')
-                return
+                send_message(username)
             case 'r':
                 print('Reading TBD')
-                return
             case 'e':
                 print('Logging out...')
                 return

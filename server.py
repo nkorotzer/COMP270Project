@@ -16,19 +16,19 @@ def add_start_and_end(encrypted):
     # input should be encoded
     return 'start'.encode() + encrypted + 'end'.encode()
 
-def decrypt_outer_packet(username, ctext):
+def decrypt_outer_packet(username, ctext: bytes):
     user_public_key = database.get_user_pub_key(username)
     server_private_key = server_info.get_private_key()
     return encrypt.decrypt_text(user_public_key, server_private_key, ctext)
 
-def encrypt_outer_packet(username, ptext):
+def encrypt_outer_packet(username, ptext: bytes):
     user_public_key = database.get_user_pub_key(username)
     server_private_key = server_info.get_private_key()
     return encrypt.encrypt_text(user_public_key, server_private_key, ptext)
 
 def parse_message_from_client(data):
     message = remove_start_and_end(data)
-    print('message:\t',message)
+    # print('message:\t',message)
     message_type = message[0:1]
 
     match message_type:
@@ -54,6 +54,21 @@ def parse_message_from_client(data):
             result = database.validate_user(username, password)
             encrypted = encrypt_outer_packet(username,str(result).encode())
             return message_types.VALIDATE_USER + encrypted
+        
+        case message_types.GET_PUBLIC_KEY:
+            requesting_user = message[1:17].decode()
+            requested_user = decrypt_outer_packet(requesting_user,message[17:]).decode()
+            requested_user_pub_key = database.get_user_pub_key(requested_user)
+            encrypted = encrypt_outer_packet(requesting_user,requested_user_pub_key)
+            return message_types.GET_PUBLIC_KEY + encrypted
+        
+        case message_types.SEND_MESSAGE:
+            sender = message[1:17].decode()
+            blob = decrypt_outer_packet(sender, message[17:])
+            receiver = blob[:16].decode()
+            result = database.add_message(receiver,blob[16:])
+            encrypted = encrypt_outer_packet(sender,result.encode())
+            return message_types.SEND_MESSAGE + encrypted
 
         case _:
             return 'Invalid message type received from client'.encode()

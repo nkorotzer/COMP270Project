@@ -8,11 +8,11 @@ import nacl.exceptions
 def get_box(pub_key, sec_key):
     return Box(PrivateKey(sec_key), PublicKey(pub_key))
 
-def encrypt_text(pub_key, sec_key, ptext):
+def encrypt_text(pub_key: bytes, sec_key: bytes, ptext: bytes) -> bytes:
     box = get_box(pub_key, sec_key)
     return box.encrypt(ptext)
 
-def decrypt_text(pub_key, sec_key, ctext):
+def decrypt_text(pub_key: bytes, sec_key: bytes, ctext: bytes) -> bytes:
     box = get_box(pub_key, sec_key)
     return box.decrypt(ctext)
 

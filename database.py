@@ -2,6 +2,7 @@ import sqlite3
 import sys
 import nacl.pwhash
 import nacl.exceptions
+import datetime
 
 db_name = "info.db"
 
@@ -23,7 +24,7 @@ def create_user_table(cur):
      
     if listOfTables == []:
         print('Table not found, creating...')
-        sql = "CREATE TABLE user(username, password, pkey, msgs)"
+        sql = "CREATE TABLE user(username, password, pkey, msgs, date)"
         cur.execute(sql)
     else:
         print('Table found!')
@@ -45,10 +46,10 @@ def delete_user_table_contents():
 def add_user(username, password, pkey):
     con, cur = connect_to_database(db_name)
     sql =   """INSERT INTO user
-            (username,password,pkey,msgs)
+            (username,password,pkey,msgs,date)
             VALUES
-            (?, ?, ?, ?);"""
-    data_tuple = (username, password, pkey, '')
+            (?, ?, ?, ?, ?);"""
+    data_tuple = (username, password, pkey, '', datetime.datetime.now())
     try:
         cur.execute(sql, data_tuple)
         con.commit()
@@ -92,7 +93,9 @@ def does_user_exist(username):
 
 def validate_user(username, password):
     con, cur = connect_to_database(db_name)
-    sql = """SELECT password FROM user where username=?"""
+    sql = """SELECT password 
+            FROM user 
+            WHERE username=? AND password != ''"""
     try:
         cur.execute(sql,(username,))
         result = cur.fetchone()
@@ -111,9 +114,11 @@ def validate_user(username, password):
     con.close()
     return result
 
-def get_user_pub_key(username):
+def get_user_pub_key(username: str) -> bytes:
     con, cur = connect_to_database(db_name)
-    sql = """SELECT pkey FROM user where username=?"""
+    sql = """SELECT pkey 
+            FROM user 
+            WHERE username=? AND pkey != ''"""
     try:
         cur.execute(sql,(username,))
         result = cur.fetchone()
@@ -123,6 +128,25 @@ def get_user_pub_key(username):
     cur.close()
     con.close()    
     return result[0]
+
+def add_message(recipient: str, encrypted_message: bytes):
+    con, cur = connect_to_database(db_name)
+    sql =   """INSERT INTO user
+            (username,password,pkey,msgs,date)
+            VALUES
+            (?, ?, ?, ?, ?);"""
+    data_tuple = (recipient, '', '', encrypted_message, datetime.datetime.now())
+    try:
+        cur.execute(sql, data_tuple)
+        con.commit()
+        ret = 'success'
+    except sqlite3.Error as error:
+        print('Error adding user: ',error)
+        ret = 'fail'
+
+    cur.close()
+    con.close()
+    return ret
 
 def main():
     con, cur = connect_to_database(db_name)

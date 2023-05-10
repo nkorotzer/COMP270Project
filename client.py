@@ -56,7 +56,19 @@ def message_validate_user(username, password):
     response = send_message_to_server(message)
     return response
 
-def send_message_to_server(message):
+def message_get_user_pub_key(sender: str, encrypted_target: bytes):
+    # sends message to server to request a user's public key
+    message = message_types.GET_PUBLIC_KEY + sender.encode() + encrypted_target
+    response = send_message_to_server(message)
+    return response
+
+def message_send_message(sender: str, encrypted_data:bytes):
+    # sends message to server to add message to recipient database
+    message = message_types.SEND_MESSAGE + sender.encode() + encrypted_data
+    response = send_message_to_server(message)
+    return response
+
+def send_message_to_server(message: bytes):
     # pass in encoded message to send to server
     # return the response from the server
     BUFFER_SIZE = 1024
@@ -105,6 +117,12 @@ def parse_response_from_server(data):
                 return False
             
         case message_types.VALIDATE_USER:
+            return message[1:]
+        
+        case message_types.GET_PUBLIC_KEY:
+            return message[1:]
+        
+        case message_types.SEND_MESSAGE:
             return message[1:]
 
         case _:
