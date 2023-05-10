@@ -59,6 +59,7 @@ def message_validate_user(username, password):
 def send_message_to_server(message):
     # pass in encoded message to send to server
     # return the response from the server
+    BUFFER_SIZE = 1024
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         try:
@@ -67,12 +68,18 @@ def send_message_to_server(message):
             print('Error connecting, closing... (double check that server is running)')
             sys.exit()
 
-        print(f'Connected to {HOST}:{PORT}')
+        # print(f'Connected to {HOST}:{PORT}')
 
         msg = add_start_and_end(message)
         s.sendall(msg)
-
-        data = s.recv(1024)
+        
+        data = b''
+        while True:
+            block = s.recv(BUFFER_SIZE)
+            data += block
+            if b'end' in block:
+                break
+            
         response = parse_response_from_server(data)
     return response
 
@@ -84,7 +91,7 @@ def parse_response_from_server(data):
     match message_type:
         case message_types.CHECK_USER:
             response = message[1:].decode()
-            print('response:\t',response)
+            # print('response:\t',response)
             if response == 'yes':
                 return True
             else:

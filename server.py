@@ -48,14 +48,16 @@ def client_thread(connection, address):
     BUFFER_SIZE = 1024
     with connection:
         print(f"Connected by {address}")
+        data = b''
         while True:
-            data = connection.recv(BUFFER_SIZE)
-            if not data:
+            block = connection.recv(BUFFER_SIZE)
+            data += block
+            if b'end' in block:
                 break
-
-            return_msg = parse_message_from_client(data)
-            return_msg = add_start_and_end(return_msg)
-            connection.sendall(return_msg)
+            
+        return_msg = parse_message_from_client(data)
+        return_msg = add_start_and_end(return_msg)
+        connection.sendall(return_msg)
     print(f'Closing connection with {address}')
 
 def listen_on_socket(host, port):
