@@ -124,7 +124,7 @@ def send_message(sender):
 
     # two-layer encryption packet formation
     innerBox = encrypt.encrypt_text(receiver_pub_key, user_sec_key, message.encode())
-    innerBox = receiver.encode() + innerBox
+    innerBox = receiver.encode() + sender.encode() + innerBox
     outerBox = encrypt.encrypt_text(server_pub_key, user_sec_key, innerBox)
 
     # call client function to send message to recipient
