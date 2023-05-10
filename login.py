@@ -1,6 +1,7 @@
 import nacl.pwhash
 import client
 import server_info
+import encrypt
 from nacl.public import PrivateKey
 
 userinfo_file = 'userinfo.txt'
@@ -28,7 +29,15 @@ def does_user_exist(username):
     return client.message_does_user_exist(username)
     
 def check_password(username, password):
-    return client.message_validate_user(username, password)
+    user_sec_key = get_user_private_key(username)
+    server_pub_key = get_server_public_key()
+    encrypted = encrypt.encrypt_text(server_pub_key,user_sec_key,password.encode())
+    response = client.message_validate_user(username, encrypted)
+    result = encrypt.decrypt_text(server_pub_key,user_sec_key,response).decode()
+    if result == "True":
+        return True
+    else:
+        return False
 
 def validate_user():
     # check user's username and password
@@ -55,7 +64,8 @@ def store_private_key(username, sec_key):
 
 def get_user_private_key(username):
     # returns the private key bytes
-    fileName = f'{username}.txt'
+    orig = username.strip('_')
+    fileName = f'{orig}.txt'
     with open(fileName,'rb') as file:
         return file.read()
 

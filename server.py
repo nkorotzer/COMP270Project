@@ -3,6 +3,8 @@ import socket
 from threading import Thread
 import database
 import message_types
+import encrypt
+import server_info
 
 def remove_start_and_end(data):
     if data[0:5] == b'start' and data[-3:] == b'end':
@@ -14,8 +16,19 @@ def add_start_and_end(encrypted):
     # input should be encoded
     return 'start'.encode() + encrypted + 'end'.encode()
 
+def decrypt_outer_packet(username, ctext):
+    user_public_key = database.get_user_pub_key(username)
+    server_private_key = server_info.get_private_key()
+    return encrypt.decrypt_text(user_public_key, server_private_key, ctext)
+
+def encrypt_outer_packet(username, ptext):
+    user_public_key = database.get_user_pub_key(username)
+    server_private_key = server_info.get_private_key()
+    return encrypt.encrypt_text(user_public_key, server_private_key, ptext)
+
 def parse_message_from_client(data):
     message = remove_start_and_end(data)
+    print('message:\t',message)
     message_type = message[0:1]
 
     match message_type:
@@ -36,10 +49,11 @@ def parse_message_from_client(data):
         
         case message_types.VALIDATE_USER:
             username = message[1:17].decode()
-            password = message[17:].decode()
+            password = decrypt_outer_packet(username,message[17:]).decode()
             print(username, password)
             result = database.validate_user(username, password)
-            return message_types.VALIDATE_USER + str(result).encode()
+            encrypted = encrypt_outer_packet(username,str(result).encode())
+            return message_types.VALIDATE_USER + encrypted
 
         case _:
             return 'Invalid message type received from client'.encode()
