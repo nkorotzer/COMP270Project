@@ -106,7 +106,23 @@ def validate_user(username, password):
         result = nacl.pwhash.scrypt.verify(password_hash, password.encode())
     except nacl.exceptions.CryptoError as error:
         print('error verifying password: ', error)
+    
+    cur.close()
+    con.close()
     return result
+
+def get_user_pub_key(username):
+    con, cur = connect_to_database(db_name)
+    sql = """SELECT pkey FROM user where username=?"""
+    try:
+        cur.execute(sql,(username,))
+        result = cur.fetchone()
+    except sqlite3.Error as error:
+        print(f'Error finding {username}\'s public key: ', error)
+
+    cur.close()
+    con.close()    
+    return result[0]
 
 def main():
     con, cur = connect_to_database(db_name)
