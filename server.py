@@ -69,6 +69,12 @@ def parse_message_from_client(data):
             result = database.add_message(receiver,blob[16:])
             encrypted = encrypt_outer_packet(sender,result.encode())
             return message_types.SEND_MESSAGE + encrypted
+        
+        case message_types.READ_ALL_MESSAGES:
+            sender = message[1:17].decode()
+            result = str(database.read_all_messages(sender)).encode()
+            encrypted = encrypt_outer_packet(sender, result)
+            return message_types.READ_ALL_MESSAGES + encrypted
 
         case _:
             return 'Invalid message type received from client'.encode()

@@ -137,6 +137,34 @@ def send_message(sender):
         print('Error while sending message')
     return
 
+def print_message(message, sender):
+    sender_orig = sender.decode().strip('_')
+    message_orig = message.decode()
+    print(f'Message from {sender_orig}:\n\'{message_orig}\'')
+
+def parse_message(receiver:str, msg: bytes):
+    message_sender = msg[:16]
+    # print('message sender: ', message_sender)
+    message = msg[16:]
+    user_sec_key = get_user_private_key(receiver)
+    server_pub_key = get_server_public_key()
+    encrypted_target = encrypt.encrypt_text(server_pub_key, user_sec_key, message_sender)
+    response = client.message_get_user_pub_key(receiver, encrypted_target)
+    message_sender_pub_key = encrypt.decrypt_text(server_pub_key, user_sec_key, response)
+    # print('message_sender_pub_key: ', message_sender_pub_key)
+    ptext = encrypt.decrypt_text(message_sender_pub_key, user_sec_key, message)
+    print_message(ptext,message_sender)
+
+def read_all_messages(username):
+    encrypted = client.message_read_all_messages(username)
+    user_sec_key = get_user_private_key(username)
+    server_pub_key = get_server_public_key()
+    response = encrypt.decrypt_text(server_pub_key, user_sec_key, encrypted)
+    msgs = eval(response)
+    for msg in msgs:
+        # print('msg:',msg[0])
+        parse_message(username, msg[0])
+
 def get_user_menu_choice():
     valid_choices = 'sre'
     while True:
@@ -158,7 +186,7 @@ def user_menu(username):
             case 's':
                 send_message(username)
             case 'r':
-                print('Reading TBD')
+                read_all_messages(username)
             case 'e':
                 print('Logging out...')
                 return

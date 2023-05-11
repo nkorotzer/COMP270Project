@@ -50,7 +50,7 @@ def message_create_user(username, password, pub_key):
     response = send_message_to_server(message)
     return response
 
-def message_validate_user(username, password):
+def message_validate_user(username: str, password: bytes):
     # sends packet to server to validate user credentials
     message = message_types.VALIDATE_USER + username.encode() + password
     response = send_message_to_server(message)
@@ -65,6 +65,12 @@ def message_get_user_pub_key(sender: str, encrypted_target: bytes):
 def message_send_message(sender: str, encrypted_data:bytes):
     # sends message to server to add message to recipient database
     message = message_types.SEND_MESSAGE + sender.encode() + encrypted_data
+    response = send_message_to_server(message)
+    return response
+
+def message_read_all_messages(username: str):
+    # sends message to server to request inbox for a user
+    message = message_types.READ_ALL_MESSAGES + username.encode()
     response = send_message_to_server(message)
     return response
 
@@ -96,7 +102,7 @@ def send_message_to_server(message: bytes):
     return response
 
 def parse_response_from_server(data):
-    print('parsing received message:\t', data)
+    # print('parsing received message:\t', data)
     message = remove_start_and_end(data)
     message_type = message[0:1]
 
@@ -123,6 +129,9 @@ def parse_response_from_server(data):
             return message[1:]
         
         case message_types.SEND_MESSAGE:
+            return message[1:]
+        
+        case message_types.READ_ALL_MESSAGES:
             return message[1:]
 
         case _:

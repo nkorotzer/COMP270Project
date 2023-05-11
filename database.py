@@ -148,6 +148,24 @@ def add_message(recipient: str, encrypted_message: bytes):
     con.close()
     return ret
 
+def read_all_messages(username):
+    con, cur = connect_to_database(db_name)
+    sql = """SELECT msgs 
+            FROM user 
+            WHERE username=? AND pkey == ''
+            ORDER BY date"""
+    try:
+        cur.execute(sql,(username,))
+        ret = cur.fetchall()
+        print('ret: ',ret)
+    except sqlite3.Error as error:
+        print('Error reading user messages: ', error)
+        ret = 'Error'
+    if not ret:
+        return b'None'
+    else:
+        return ret
+
 def main():
     con, cur = connect_to_database(db_name)
     if con == None:
